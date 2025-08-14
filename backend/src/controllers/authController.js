@@ -41,18 +41,18 @@ const login = async (req, res) => {
     // Set token as an HTTP-only cookie
   res.cookie('accessToken', accessToken, {
     httpOnly: true, 
-    // secure: process.env.NODE_ENV === 'production',
-    // sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
     maxAge: 60 * 60 * 1000,
-    // path: '/'
+    path: '/'
   });
 
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true, 
-    // secure: process.env.NODE_ENV === 'production',
-    // sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
     maxAge: 60 * 60 * 1000 * 24 * 30,
-    // path: '/'
+    path: '/'
   });
 
   res.status(200).json( {message: 'Login successful!', user: { userId: rows[0].user_id, first_name: rows[0].first_name, last_name: rows[0].last_name, email: rows[0].email, role: rows[0].role, accessToken, refreshToken }});

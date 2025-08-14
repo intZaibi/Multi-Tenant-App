@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation';
 import { getUser, refreshToken as refreshTokenApi } from './api';
 import { getCookies, setCookies } from './cookies';
 
@@ -62,16 +61,4 @@ export async function getServerUser(): Promise<User | null> {
     console.error('Server authentication error:', error);
     return null;
   }
-}
-
-// Server-side protected route wrapper
-export async function requireAuth(): Promise<User> {
-  const user = await getServerUser();
-  
-  if (!user) {
-    console.log('No user found, redirecting to /auth');
-    redirect('/auth');
-  }
-  
-  return user;
 }

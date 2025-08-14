@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getCookies } from './services/cookies';
-
 
 function extractSubdomain(request: NextRequest): string | null {
   const url = request.url;
@@ -48,7 +46,8 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const subdomain = extractSubdomain(request);
 
-  const { accessToken, refreshToken } = await getCookies();
+  const accessToken = request.cookies.get('accessToken')?.value;
+  const refreshToken = request.cookies.get('refreshToken')?.value;
   
   const publicRoutes = ['/auth', '/login', '/register', '/api/auth'];
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
@@ -57,13 +56,13 @@ export async function middleware(request: NextRequest) {
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
   
   // If accessing a protected route without any tokens, redirect to auth
-//   if (isProtectedRoute && (!accessToken || !refreshToken)) {
-//   if (subdomain) {
-//     NextResponse.rewrite(new URL(`/s/${subdomain}`, request.url));
-//   }
-//   const response = NextResponse.redirect(new URL('/auth', request.url));
-//   return response;
-// }
+  if (isProtectedRoute && (!accessToken || !refreshToken)) {
+    if (subdomain) {
+      NextResponse.rewrite(new URL(`/s/${subdomain}/auth`, request.url));
+    }
+    const response = NextResponse.redirect(new URL('/auth', request.url));
+    return response;
+  }
 
   
   if (pathname === '/auth' && (accessToken || refreshToken)) {
