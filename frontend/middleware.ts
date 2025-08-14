@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { getCookies } from './services/cookies';
 
 
 function extractSubdomain(request: NextRequest): string | null {
@@ -43,12 +44,11 @@ function extractSubdomain(request: NextRequest): string | null {
 }
 
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const subdomain = extractSubdomain(request);
 
-  const accessToken = request.cookies.get('accessToken')?.value;
-  const refreshToken = request.cookies.get('refreshToken')?.value;
+  const { accessToken, refreshToken } = await getCookies();
   
   const publicRoutes = ['/auth', '/login', '/register', '/api/auth'];
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));

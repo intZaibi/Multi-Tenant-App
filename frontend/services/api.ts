@@ -1,4 +1,5 @@
 import axios from "axios";
+import { deleteCookies, getCookies, setCookies } from "./cookies";
 
 const api = axios.create({
   baseURL: "http://localhost:5000/api",
@@ -8,11 +9,10 @@ const api = axios.create({
 
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     if (axios.isAxiosError(error)) {
       if (error.response?.status === 401 || error.response?.status === 403) {
-        document.cookie = 'accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-        document.cookie = 'refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        await deleteCookies();
       }
     }
     return Promise.reject(error);
@@ -22,6 +22,8 @@ api.interceptors.response.use(
 export const register = async (name: string, email: string, password: string, role: string, tenantId: number) => {
   try {
     const response = await api.post("/auth/register", { name, email, password, role, tenantId });
+    
+    await setCookies(response.data.user.accessToken, response.data.user.refreshToken);
     
     return response.data;
   } catch (error) {
@@ -36,6 +38,8 @@ export const register = async (name: string, email: string, password: string, ro
 export const login = async (email: string, password: string) => {
   try {
     const response = await api.post("/auth/login", { email, password });
+
+    await setCookies(response.data.user.accessToken, response.data.user.refreshToken);
     
     return response.data;
   } catch (error) {
@@ -47,13 +51,16 @@ export const login = async (email: string, password: string) => {
   }
 }
 
-export const refreshToken = async (refreshTokenParam: string) => {
+export const refreshToken = async () => {
+  const { refreshToken } = await getCookies();
   try {
     const response = await api.get("/auth/refresh", {
       headers: {
-        Authorization: `Bearer ${refreshTokenParam}`,
+        Authorization: `Bearer ${refreshToken}`,
       },
     });
+
+    await setCookies(response.data.user.accessToken, response.data.user.refreshToken);
     
     return response.data;
   } catch (error) {
@@ -66,7 +73,8 @@ export const refreshToken = async (refreshTokenParam: string) => {
   }
 }
 
-export const getUser = async (accessToken: string) => {
+export const getUser = async () => {
+  const { accessToken } = await getCookies();
   try {
     const response = await api.get("/auth/get-user", {
       headers: {
@@ -85,8 +93,13 @@ export const getUser = async (accessToken: string) => {
 }
 
 export const getTenants = async () => {
+  const { accessToken } = await getCookies();
   try {
-    const response = await api.get("/auth/tenants");
+    const response = await api.get("/auth/tenants", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
     return response.data;
   } catch (error) {
     console.log("get tenants failed!", error);
@@ -98,8 +111,13 @@ export const getTenants = async () => {
 }
 
 export const logout = async () => {
+  const { accessToken } = await getCookies();
   try {
-    await api.get("/auth/logout");
+    await api.get("/auth/logout", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
 
     return { success: "Logout successful!" };
   } catch (error) {
@@ -111,8 +129,13 @@ export const logout = async () => {
 }
 
 export const getUserNotifications = async () => {
+  const { accessToken } = await getCookies();
   try {
-    const response = await api.get("/notifications/get-notifications",);
+    const response = await api.get("/notifications/get-notifications", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -126,8 +149,13 @@ export const getUserNotifications = async () => {
 }
 
 export const getUnreadNotifications = async () => {
+  const { accessToken } = await getCookies();
   try {
-    const response = await api.get("/notifications/get-unread-notifications");
+    const response = await api.get("/notifications/get-unread-notifications", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -138,8 +166,13 @@ export const getUnreadNotifications = async () => {
 }
 
 export const getNotificationStats = async () => {
+  const { accessToken } = await getCookies();
   try {
-    const response = await api.get("/notifications/stats/overview");
+    const response = await api.get("/notifications/stats/overview", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -150,8 +183,13 @@ export const getNotificationStats = async () => {
 }
 
 export const getTenantNotificationStats = async (tenantId: number) => {
+  const { accessToken } = await getCookies();
   try {
-    const response = await api.get(`/notifications/stats/tenant/${tenantId}`);
+    const response = await api.get(`/notifications/stats/tenant/${tenantId}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
     return response.data;
   } catch (error) {
     console.log("get tenant notification stats failed!", error);
@@ -163,8 +201,13 @@ export const getTenantNotificationStats = async (tenantId: number) => {
 }
 
 export const markAsRead = async (notificationId: number | null) => {
+  const { accessToken } = await getCookies();
   try {
-    const response = await api.post("/notifications/mark-as-read", { notificationId });
+    const response = await api.post("/notifications/mark-as-read", { notificationId }, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
     console.log("response: ", response);
     return response.data;
   } catch (error) {
@@ -177,8 +220,13 @@ export const markAsRead = async (notificationId: number | null) => {
 }
 
 export const deleteNotification = async (notificationId: number) => {
+  const { accessToken } = await getCookies();
   try {
-    const response = await api.delete(`/notifications/${notificationId}`);
+    const response = await api.delete(`/notifications/${notificationId}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
     console.log("response: ", response);
     return response.data;
   } catch (error) {
