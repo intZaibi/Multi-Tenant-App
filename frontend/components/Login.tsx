@@ -73,11 +73,4 @@ const LoginForm = ({ setPage }: { setPage?: React.Dispatch<React.SetStateAction<
   );
 };
 
-
-
-
-
-
-
-
 export default LoginForm;

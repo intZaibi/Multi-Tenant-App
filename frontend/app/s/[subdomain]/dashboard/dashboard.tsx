@@ -12,7 +12,7 @@ export default function DashboardPage() {
   const router = useRouter();
   useEffect(() => {
     const fetchUser = async () => {
-      const user = await getServerUser();
+  const user = await getServerUser();
       if(user){
         setUser(user);
         setLoading(false);
@@ -25,7 +25,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return <div>Loading...</div>;
-  }
+    }
 
     return (
       <DashboardLayout user={user as User}>

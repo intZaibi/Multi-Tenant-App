@@ -1,5 +1,5 @@
 
-import DashboardPage from './dashboard'
+import DashboardPage from './Dashboard'
 import { notFound } from 'next/navigation';
 import { getTenants } from '@/services/tenantjsonOperations';
 
@@ -9,7 +9,7 @@ export default async function Dashboard({ params }: { params: Promise<{ subdomai
 
   async function getTenant(subdomain: string) {
     if(!subdomain) return false;
-    try {
+  try {
       const tenants = await getTenants();
       return tenants?.some((tenant: any) => tenant.subdomain === subdomain) || false;
     } catch (error) {
@@ -21,9 +21,9 @@ export default async function Dashboard({ params }: { params: Promise<{ subdomai
   const tenant = await getTenant(subdomain);
   if(!tenant) {
     notFound();
-  }
+    }
 
-  return (
+    return (
     <DashboardPage/>
-  );
+    );
 }

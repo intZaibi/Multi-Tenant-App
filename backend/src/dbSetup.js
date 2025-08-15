@@ -1,4 +1,3 @@
-import bcrypt from 'bcrypt';
 import connection, { testConnection } from './config/db.js';
 import { seedDatabase } from './seed.js';
 
