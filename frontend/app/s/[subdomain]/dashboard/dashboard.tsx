@@ -1,15 +1,30 @@
+"use client";
 import DashboardLayout from '@/components/DashboardLayout';
 import DashboardContent from '@/components/DashboardContent';
-import { getServerUser } from '@/services/auth';
-import { redirect } from 'next/navigation';
+import { getServerUser, User } from '@/services/auth';
+import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 
-export default async function DashboardPage() {
-  try {
+export default function DashboardPage() {
+
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  useEffect(() => {
+    const fetchUser = async () => {
   const user = await getServerUser();
+      if(user){
+        setUser(user);
+        setLoading(false);
+      }else{
+        router.push('/auth');
+      }
+    };
+    fetchUser();
+  }, []);
 
-    if (!user) {
-      console.log('Dashboard: No user found, redirecting to /auth');
-      redirect('/auth');
+  if (loading) {
+    return <div>Loading...</div>;
     }
 
     return (
@@ -17,8 +32,4 @@ export default async function DashboardPage() {
         <DashboardContent user={user as User} />
       </DashboardLayout>
     );
-  } catch (error) {
-    console.error('Dashboard page error:', error);
-    redirect('/auth');
-  }
 }
