@@ -66,32 +66,32 @@ const login = async (req, res) => {
 
 const register = async (req, res) => {
 
-  const { first_name, last_name, email, password, role, tenantId = 1 } = req.body;
-  if (!first_name || !email || !password || !role ) return res.status(400).json({ error: "Please provide your first name, last name, email, password, role." });
+  const { name, last_name, email, password, role, tenantId = 1 } = req.body;
+  if (!name || !email || !password || !role ) return res.status(400).json({ error: "Please provide your first name, last name, email, password, role." });
   try {
     const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
     if (rows && rows.length > 0) return res.status(400).json({ error: "Email already exists!" });
     
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const [result] = await db.query('INSERT INTO users (first_name, last_name, email, password, role, tenant_id) VALUES (?, ?, ?, ?, ?, ?)', [first_name, last_name || '', email, hashedPassword, role, tenantId]); 
+    const [result] = await db.query('INSERT INTO users (first_name, last_name, email, password, role, tenant_id) VALUES (?, ?, ?, ?, ?, ?)', [name, last_name || '', email, hashedPassword, role, tenantId]); 
     if (result.affectedRows === 0) {
       return res.status(500).json({ error: "Registration failed!" });
     }
 
     const accessToken = jwt.sign(
-      { userId: result.user_id, role: role, tenantId: tenantId },
+      { userId: result.insertId, role, tenantId },
       process.env.JWT_SECRET || "enc",
       { expiresIn: '1h' }
     );
 
     const refreshToken = jwt.sign(
-      { userId: result.user_id, role: role, tenantId: tenantId },
+      { userId: result.insertId, role, tenantId },
       process.env.JWT_SECRET || "enc",
       { expiresIn: '30d' }
     );
 
-    const [result2] = await db.query('INSERT INTO user_sessions (user_id, refresh_token) VALUES (?, ?)', [result.user_id, refreshToken]);
+    const [result2] = await db.query('INSERT INTO user_sessions (user_id, refresh_token) VALUES (?, ?)', [result.insertId, refreshToken]);
     if (result2.affectedRows === 0) {
       return res.status(500).json({ error: "Token updation failed!" });
     }
@@ -112,7 +112,7 @@ const register = async (req, res) => {
       path: '/'
     });
 
-    res.status(200).json({message: 'Registration successful!', user: { first_name, last_name, email, role, tenantId, accessToken: token, refreshToken: token }});
+    res.status(200).json({message: 'Registration successful!', user: { name, last_name: last_name || '', email, role, tenantId, accessToken, refreshToken }});
     
   } catch (error) {
     console.log('db updation failed!', error)
@@ -177,7 +177,7 @@ const refresh = async (req, res) => {
       path: '/'
     });
   
-    res.status(200).json({message: 'Token refreshed successfully!', user: { userId: user[0].user_id, role: user[0].role, accessToken: newAccessToken, refreshToken: newRefreshToken }});
+    res.status(200).json({message: 'Token refreshed successfully!', user: { userId: user[0].user_id, first_name: user[0].first_name, last_name: user[0].last_name, email: user[0].email, role: user[0].role, tenantId: user[0].tenant_id, accessToken: newAccessToken, refreshToken: newRefreshToken }});
 
   } catch (error) {
     console.error('Database update failed:', error);
@@ -233,4 +233,14 @@ const getUser = async (req, res) => {
   }
 }
 
-export {login, register, refresh, logout, getUser};
+const getTenants = async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT id, name, display_name FROM tenants ORDER BY created_at DESC');
+    res.status(200).json({ data: rows });
+  } catch (error) {
+    console.error('Error fetching tenants:', error);
+    res.status(500).json({ error: 'Failed to fetch tenants' });
+  }
+};
+
+export {login, register, refresh, logout, getUser, getTenants};

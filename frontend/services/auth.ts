@@ -23,39 +23,24 @@ export async function getServerUser(): Promise<User | null> {
 
     // Try to get user with current access token
     if (accessToken) {
-      try {
-        const user = await getUser();
-        if (user && !('error' in user)) {
-          return user as User;
-        }
-      } catch (error) {
-        console.log('Access token invalid, trying refresh token', error);
-      }
-    }
+        const result = await getUser();
 
-    // Try to refresh token if access token failed or doesn't exist
-    if (refreshToken) {
-      try {
-        const refreshResult = await refreshTokenApi();
+        if (result && !('error' in result)) {
+          return result.user as User;
 
-        if (refreshResult && !('error' in refreshResult) && refreshResult.user) {
-          // Set new tokens in cookies
-          await setCookies(refreshResult.user.accessToken, refreshResult.user.refreshToken);
-        
-          const user = await getUser();
-          if (user && !('error' in user)) {
-            console.log('User authenticated with refreshed token');
-            return user as User;
+        } else if(result.error.includes('Unauthorized! Token not found!') || result.error.includes('Token expired!')) {
+          
+          const refreshResult = await refreshTokenApi();
+          
+          if (refreshResult && !('error' in refreshResult) && refreshResult.user) {
+
+            // Set new tokens in cookies
+            await setCookies(refreshResult.user.accessToken, refreshResult.user.refreshToken);
+            return refreshResult.user as User;
           }
         }
-        
-      } catch (error) {
-        console.log('Refresh token failed', error);
-        return null;
-      }
     }
 
-    console.log('All authentication methods failed, returning null');
     return null;
   } catch (error) {
     console.error('Server authentication error:', error);

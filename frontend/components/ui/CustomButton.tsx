@@ -1,6 +1,6 @@
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
-  variant?: 'primary' | 'secondary' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'ghost' | 'outline';
   size?: 'sm' | 'md' | 'lg';
 }
 
@@ -21,6 +21,7 @@ export const CustomButton: React.FC<ButtonProps> = ({
     secondary:
       'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 hover:border-slate-600',
     ghost: 'text-purple-400 hover:text-purple-300 hover:bg-slate-800/50',
+    outline: 'bg-transparent border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700',
   };
 
   const sizes: Record<string, string> = {

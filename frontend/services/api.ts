@@ -1,5 +1,6 @@
 import axios from "axios";
 import { deleteCookies, getCookies, setCookies } from "./cookies";
+import { insertTenant, deleteTenant as deleteTenantJson } from "./tenantjsonOperations";
 
 const api = axios.create({
   baseURL: "http://localhost:5000/api",
@@ -93,13 +94,8 @@ export const getUser = async () => {
 }
 
 export const getTenants = async () => {
-  const { accessToken } = await getCookies();
   try {
-    const response = await api.get("/auth/tenants", {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
+    const response = await api.get("/auth/tenants");
     return response.data;
   } catch (error) {
     console.log("get tenants failed!", error);
@@ -235,5 +231,85 @@ export const deleteNotification = async (notificationId: number) => {
       return { error: error.response?.data?.error || error.message || "Delete notification failed!" };
     }
     return { error: "Delete notification failed!" };
+  }
+}
+
+// Tenant Management API functions
+export const getAllTenants = async () => {
+  try {
+    const response = await api.get("/tenants");
+    return response.data;
+  } catch (error) {
+    console.log("get all tenants failed!", error);
+    if (axios.isAxiosError(error)) {
+      return { error: error.response?.data?.error || error.message || "Get tenants failed!" };
+    }
+    return { error: "Get tenants failed!" };
+  }
+}
+
+export const createTenant = async (name: string, subdomain: string) => {
+  const { accessToken } = await getCookies();
+  if (!name || !subdomain) {
+    return { error: "Name and subdomain are required!" };
+  }
+  try {
+    const response = await api.post("/tenant/create-tenant", { name, subdomain }, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    // add tenant to tenants.json
+    insertTenant(response.data.tenant.insertId, name, subdomain);
+
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.log("error from create tenant: ", error);
+      return { error: error.response?.data?.error || error.message || "Create tenant failed!" };
+    }
+    console.log("error from create tenant: ", error);
+    return { error: "Create tenant failed!" };
+  }
+}
+
+export const updateTenant = async (id: number, name: string, displayName: string) => {
+  const { accessToken } = await getCookies();
+  try {
+    const response = await api.put(`/tenants/${id}`, { name, displayName }, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.log("update tenant failed!", error);
+    if (axios.isAxiosError(error)) {
+      return { error: error.response?.data?.error || error.message || "Update tenant failed!" };
+    }
+    return { error: "Update tenant failed!" };
+  }
+}
+
+export const deleteTenant = async (id: number) => {
+  const { accessToken } = await getCookies();
+  if (!id) {
+    return { error: "Tenant id is required!" };
+  }
+  try {
+    const response = await api.delete(`/tenant/delete-tenant/${id}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    console.log("response from delete tenant: ", response);
+    deleteTenantJson(id);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      return { error: error.response?.data?.error || error.message || "Delete tenant failed!" };
+    }
+    return { error: "Delete tenant failed!" };
   }
 } 
