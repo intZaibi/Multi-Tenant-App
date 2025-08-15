@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import db from '../config/db.js';
 
 // Middleware to authenticate JWT token
 export const authMiddleware = async (req, res, next) => {

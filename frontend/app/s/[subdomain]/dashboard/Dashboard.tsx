@@ -13,8 +13,8 @@ export default async function DashboardPage() {
     }
 
     return (
-      <DashboardLayout user={user as User}>
-        <DashboardContent user={user as User} />
+      <DashboardLayout user={user}>
+        <DashboardContent user={user} />
       </DashboardLayout>
     );
   } catch (error) {

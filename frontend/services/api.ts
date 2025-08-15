@@ -1,5 +1,6 @@
 import axios from "axios";
-import { deleteTenant as deleteTenantJson, insertTenant } from "./tenantjsonOperations";
+import { deleteCookies, getCookies, setCookies } from "./cookies";
+import { insertTenant, deleteTenant as deleteTenantJson } from "./tenantjsonOperations";
 
 const api = axios.create({
   baseURL: "http://localhost:5000/api",
@@ -7,24 +8,26 @@ const api = axios.create({
   timeout: 10000,
 });
 
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (axios.isAxiosError(error)) {
-      if (error.response?.status === 401 || error.response?.status === 403) {
-        document.cookie = 'accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-        document.cookie = 'refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      }
-    }
-    return Promise.reject(error);
-  }
-);
+// api.interceptors.response.use(
+//   (response) => response,
+//   async (error) => {
+//     if (axios.isAxiosError(error)) {
+//       if (error.response?.status === 401 || error.response?.status === 403) {
+//         await deleteCookies();
+//       }
+//     }
+//     return Promise.reject(error);
+//   }
+// );
 
 export const register = async (name: string, email: string, password: string, role: string, tenantId: number) => {
   
   try {
     const response = await api.post("/auth/register", { name, email, password, role, tenantId });
     
+    // await setCookies(response.data.user.accessToken, response.data.user.refreshToken);
+    localStorage.setItem('accessToken', response.data.user.accessToken);
+    localStorage.setItem('refreshToken', response.data.user.refreshToken);
     return response.data;
   } catch (error) {
     console.log("register failed!", error);
@@ -97,8 +100,13 @@ export const getUser = async () => {
 }
 
 export const logout = async () => {
+  const { accessToken } = await getCookies();
   try {
-    await api.get("/auth/logout");
+    await api.get("/auth/logout", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
 
     return { success: "Logout successful!" };
   } catch (error) {

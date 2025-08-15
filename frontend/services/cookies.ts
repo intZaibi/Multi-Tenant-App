@@ -10,7 +10,6 @@ export const setCookies = async (accessToken: string, refreshToken: string) => {
 
 export const getCookies = async () => {
   const cookieStore = await cookies()
-  console.log('cookies from getCookies: ', cookieStore.get('accessToken')?.value)
   return {
     accessToken: cookieStore.get('accessToken')?.value,
     refreshToken: cookieStore.get('refreshToken')?.value
