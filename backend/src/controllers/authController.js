@@ -15,11 +15,11 @@ const login = async (req, res) => {
   if (req == undefined) return res.status(500).json({ error: "Something went wrong!" });
 
   try {
-
   const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
   if (!rows || rows.length === 0) return res.status(404).json({ error: "Email not found!" });
   if (!(await bcrypt.compare(password, rows[0].password))) return res.status(401).json({ error: "Invalid credentials!" });
-  // Generate JWT token
+  
+  // Generate JWT token.
   const accessToken = jwt.sign(
     { userId: rows[0].user_id, role: rows[0].role, tenantId: rows[0].tenant_id },
     process.env.JWT_SECRET || "enc",
@@ -41,18 +41,16 @@ const login = async (req, res) => {
     // Set token as an HTTP-only cookie
   res.cookie('accessToken', accessToken, {
     httpOnly: true, 
-    // secure: true,
-    // sameSite: 'none',  // lax, strict, none  
-    // domain: process.env.NODE_ENV === 'production' ? `.${process.env.BASE_DOMAIN}` : undefined,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
     maxAge: 60 * 60 * 1000,
     path: '/'
   });
 
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true, 
-    // secure: true,
-    // sameSite: 'none',  // lax, strict, none
-    // domain: process.env.NODE_ENV === 'production' ? `.${process.env.BASE_DOMAIN}` : undefined,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
     maxAge: 60 * 60 * 1000 * 24 * 30,
     path: '/'
   });
@@ -82,13 +80,13 @@ const register = async (req, res) => {
     }
 
     const accessToken = jwt.sign(
-      { userId: result.user_id, role: role, tenantId: tenantId },
+      { userId: result.insertId, role, tenantId },
       process.env.JWT_SECRET || "enc",
       { expiresIn: '1h' }
     );
 
     const refreshToken = jwt.sign(
-      { userId: result.user_id, role: role, tenantId: tenantId },
+      { userId: result.insertId, role, tenantId },
       process.env.JWT_SECRET || "enc",
       { expiresIn: '30d' }
     );
@@ -101,8 +99,7 @@ const register = async (req, res) => {
     res.cookie('accessToken', accessToken, {
       httpOnly: true, 
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none',
-      domain: process.env.NODE_ENV === 'production' ? `.${process.env.BASE_DOMAIN}` : '.localhost',
+      sameSite: 'lax',
       maxAge: 60 * 60 * 1000,
       path: '/'
     });
@@ -110,13 +107,12 @@ const register = async (req, res) => {
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true, 
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none',
-      domain: process.env.NODE_ENV === 'production' ? `.${process.env.BASE_DOMAIN}` : '.localhost',
+      sameSite: 'lax',
       maxAge: 60 * 60 * 1000 * 24 * 30,
       path: '/'
     });
 
-    res.status(200).json({message: 'Registration successful!', user: { name, last_name: last_name || '', email, role, tenantId, accessToken: accessToken, refreshToken: refreshToken }});
+    res.status(200).json({message: 'Registration successful!', user: { name, last_name: last_name || '', email, role, tenantId, accessToken, refreshToken }});
     
   } catch (error) {
     console.log('db updation failed!', error)
@@ -146,7 +142,7 @@ const refresh = async (req, res) => {
       return res.clearCookie('accessToken').clearCookie('refreshToken').status(401).json({ error: "Unauthorized! Token is not valid!" });
     }
 
-    const [user] = await db.query('SELECT user_id, role, tenant_id FROM users WHERE user_id = ?', [rows[0].user_id]);
+    const [user] = await db.query('SELECT * FROM users WHERE user_id = ?', [rows[0].user_id]);
 
     const newAccessToken = jwt.sign(
       {userId: user[0].user_id, role: user[0].role, tenantId: user[0].tenant_id},
@@ -169,7 +165,6 @@ const refresh = async (req, res) => {
       httpOnly: true, 
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      domain: process.env.NODE_ENV === 'production' ? `.${process.env.BASE_DOMAIN}` : '.localhost',
       maxAge: 60 * 60 * 1000,
       path: '/'
     });
@@ -178,11 +173,10 @@ const refresh = async (req, res) => {
       httpOnly: true, 
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      domain: process.env.NODE_ENV === 'production' ? `.${process.env.BASE_DOMAIN}` : '.localhost',
       maxAge: 60 * 60 * 1000 * 24 * 30,
       path: '/'
     });
-  
+    
     res.status(200).json({message: 'Token refreshed successfully!', user: { userId: user[0].user_id, first_name: user[0].first_name, last_name: user[0].last_name, email: user[0].email, role: user[0].role, tenantId: user[0].tenant_id, accessToken: newAccessToken, refreshToken: newRefreshToken }});
 
   } catch (error) {
@@ -219,7 +213,9 @@ const logout = async (req, res) => {
 
 const getUser = async (req, res) => {
   try {
-  const [rows] = await db.query('SELECT user_id, first_name, last_name, email, role, tenant_id FROM users WHERE user_id = ? AND tenant_id = ?', [req.user.userId, req.user.tenantId]);
+    
+  const [rows] = await db.query('SELECT user_id, first_name, last_name, email, role, tenant_id FROM users WHERE user_id = ?', [req.user.userId]);
+  console.log("rows: ", rows)
   if (!rows || rows.length === 0) {
     return res.status(401).json({ error: "Unauthorized! Token is not valid!" });
   }
@@ -238,4 +234,14 @@ const getUser = async (req, res) => {
   }
 }
 
-export {login, register, refresh, logout, getUser};
+const getTenants = async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT id, name, display_name FROM tenants ORDER BY created_at DESC');
+    res.status(200).json({ data: rows });
+  } catch (error) {
+    console.error('Error fetching tenants:', error);
+    res.status(500).json({ error: 'Failed to fetch tenants' });
+  }
+};
+
+export {login, register, refresh, logout, getUser, getTenants};

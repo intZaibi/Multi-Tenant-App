@@ -75,6 +75,9 @@ export const refreshToken = async () => {
 
 export const getUser = async () => {
   const accessToken = localStorage.getItem('accessToken');
+  if (!accessToken) {
+    return { error: "Token not found!" };
+  }
   try {
     const response = await api.get("/auth/get-user", {
       headers: {
