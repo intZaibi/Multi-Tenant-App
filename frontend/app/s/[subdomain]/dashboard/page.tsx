@@ -1,5 +1,5 @@
 
-import DashboardPage from './Dashboard'
+import DashboardPage from './dashboard'
 import { notFound } from 'next/navigation';
 import { getTenants } from '@/services/tenantjsonOperations';
 
