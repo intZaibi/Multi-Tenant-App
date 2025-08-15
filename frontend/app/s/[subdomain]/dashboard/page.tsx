@@ -1,24 +1,29 @@
-import DashboardLayout from '@/components/DashboardLayout';
-import DashboardContent from '@/components/DashboardContent';
-import { getServerUser } from '@/services/auth';
-import { redirect } from 'next/navigation';
 
-export default async function DashboardPage() {
-  try {
-  const user = await getServerUser();
+import DashboardPage from './dashboard'
+import { notFound } from 'next/navigation';
+import { getTenants } from '@/services/tenantjsonOperations';
 
-    if (!user) {
-      console.log('Dashboard: No user found, redirecting to /auth');
-      redirect('/auth');
+
+export default async function Dashboard({ params }: { params: Promise<{ subdomain: string }> }) {
+  const { subdomain } = await params;
+
+  async function getTenant(subdomain: string) {
+    if(!subdomain) return false;
+    try {
+      const tenants = await getTenants();
+      return tenants?.some((tenant: any) => tenant.subdomain === subdomain) || false;
+    } catch (error) {
+      console.error("Error getting tenant: ", error);
+      return false;
     }
-
-    return (
-      <DashboardLayout user={user}>
-        <DashboardContent user={user} />
-      </DashboardLayout>
-    );
-  } catch (error) {
-    console.error('Dashboard page error:', error);
-    redirect('/auth');
   }
+
+  const tenant = await getTenant(subdomain);
+  if(!tenant) {
+    notFound();
+  }
+
+  return (
+    <DashboardPage/>
+  );
 }

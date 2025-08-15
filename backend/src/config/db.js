@@ -17,8 +17,8 @@ const db = mysql.createPool(dbConfig);
 // Test database connection
 export const testConnection = async () => {
   try {
-    const connection = await db.query('SELECT 1');
-    console.log('✅ Database connected successfully', connection);
+    await db.query('SELECT 1');
+    console.log('✅ Database connected successfully');
     return true;
   } catch (error) {
     console.error('❌ Database connection failed:', error.message);

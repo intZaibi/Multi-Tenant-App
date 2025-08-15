@@ -1,4 +1,5 @@
 import axios from "axios";
+import { deleteTenant as deleteTenantJson, insertTenant } from "./tenantjsonOperations";
 
 const api = axios.create({
   baseURL: "http://localhost:5000/api",
@@ -20,6 +21,7 @@ api.interceptors.response.use(
 );
 
 export const register = async (name: string, email: string, password: string, role: string, tenantId: number) => {
+  
   try {
     const response = await api.post("/auth/register", { name, email, password, role, tenantId });
     
@@ -36,6 +38,9 @@ export const register = async (name: string, email: string, password: string, ro
 export const login = async (email: string, password: string) => {
   try {
     const response = await api.post("/auth/login", { email, password });
+
+    localStorage.setItem('accessToken', response.data.user.accessToken);
+    localStorage.setItem('refreshToken', response.data.user.refreshToken);
     
     return response.data;
   } catch (error) {
@@ -47,14 +52,16 @@ export const login = async (email: string, password: string) => {
   }
 }
 
-export const refreshToken = async (refreshTokenParam: string) => {
+export const refreshToken = async () => {
+  const refreshToken = localStorage.getItem('refreshToken');
   try {
     const response = await api.get("/auth/refresh", {
       headers: {
-        Authorization: `Bearer ${refreshTokenParam}`,
+        Authorization: `Bearer ${refreshToken}`,
       },
     });
-    
+    localStorage.setItem('accessToken', response.data.user.accessToken);
+    localStorage.setItem('refreshToken', response.data.user.refreshToken);
     return response.data;
   } catch (error) {
     console.log("refresh token failed!", error);
@@ -66,14 +73,16 @@ export const refreshToken = async (refreshTokenParam: string) => {
   }
 }
 
-export const getUser = async (accessToken: string) => {
+export const getUser = async () => {
+  const accessToken = localStorage.getItem('accessToken');
   try {
     const response = await api.get("/auth/get-user", {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
     });
-    return response.data.user;
+    localStorage.setItem('user', JSON.stringify(response.data.user));
+    return response.data;
   } catch (error) {
     console.log("get user failed!", error);
     if (axios.isAxiosError(error)) {
@@ -81,19 +90,6 @@ export const getUser = async (accessToken: string) => {
       return { error: error.response?.data?.error || error.message || "Get user failed!" };
     }
     return { error: "Get user failed!" };
-  }
-}
-
-export const getTenants = async () => {
-  try {
-    const response = await api.get("/auth/tenants");
-    return response.data;
-  } catch (error) {
-    console.log("get tenants failed!", error);
-    if (axios.isAxiosError(error)) {
-      return { error: error.response?.data?.error || error.message || "Get tenants failed!" };
-    }
-    return { error: "Get tenants failed!" };
   }
 }
 
@@ -111,8 +107,13 @@ export const logout = async () => {
 }
 
 export const getUserNotifications = async () => {
+  const accessToken = localStorage.getItem('accessToken');
   try {
-    const response = await api.get("/notifications/get-notifications",);
+    const response = await api.get("/notifications/get-notifications", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -126,8 +127,13 @@ export const getUserNotifications = async () => {
 }
 
 export const getUnreadNotifications = async () => {
+  const accessToken = localStorage.getItem('accessToken');
   try {
-    const response = await api.get("/notifications/get-unread-notifications");
+    const response = await api.get("/notifications/get-unread-notifications", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -138,8 +144,13 @@ export const getUnreadNotifications = async () => {
 }
 
 export const getNotificationStats = async () => {
+  const accessToken = localStorage.getItem('accessToken');
   try {
-    const response = await api.get("/notifications/stats/overview");
+    const response = await api.get("/notifications/stats/overview", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -150,8 +161,13 @@ export const getNotificationStats = async () => {
 }
 
 export const getTenantNotificationStats = async (tenantId: number) => {
+  const accessToken = localStorage.getItem('accessToken');
   try {
-    const response = await api.get(`/notifications/stats/tenant/${tenantId}`);
+    const response = await api.get(`/notifications/stats/tenant/${tenantId}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
     return response.data;
   } catch (error) {
     console.log("get tenant notification stats failed!", error);
@@ -163,8 +179,13 @@ export const getTenantNotificationStats = async (tenantId: number) => {
 }
 
 export const markAsRead = async (notificationId: number | null) => {
-  try {
-    const response = await api.post("/notifications/mark-as-read", { notificationId });
+  const accessToken = localStorage.getItem('accessToken');
+    try {
+    const response = await api.post("/notifications/mark-as-read", { notificationId }, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
     console.log("response: ", response);
     return response.data;
   } catch (error) {
@@ -177,8 +198,13 @@ export const markAsRead = async (notificationId: number | null) => {
 }
 
 export const deleteNotification = async (notificationId: number) => {
+  const accessToken = localStorage.getItem('accessToken');
   try {
-    const response = await api.delete(`/notifications/${notificationId}`);
+    const response = await api.delete(`/notifications/${notificationId}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
     console.log("response: ", response);
     return response.data;
   } catch (error) {
@@ -189,3 +215,80 @@ export const deleteNotification = async (notificationId: number) => {
     return { error: "Delete notification failed!" };
   }
 } 
+
+export const getTenants = async () => {
+  try {
+    const response = await api.get("/tenant/get-tenants");
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      return { error: error.response?.data?.error || error.message || "Get tenants failed!" };
+    }
+    return { error: "Get tenants failed!" };
+  }
+}
+
+export const createTenant = async (name: string, subdomain: string) => {
+  const accessToken = localStorage.getItem('accessToken');
+  if (!name || !subdomain) {
+    return { error: "Name and subdomain are required!" };
+  }
+  try {
+    const response = await api.post("/tenant/create-tenant", { name, subdomain }, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    // add tenant to tenants.json
+    insertTenant(response.data.tenant.insertId, name, subdomain);
+
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.log("error from create tenant: ", error);
+      return { error: error.response?.data?.error || error.message || "Create tenant failed!" };
+    }
+    console.log("error from create tenant: ", error);
+    return { error: "Create tenant failed!" };
+  }
+}
+
+export const getTenantById = async (id: number) => {
+  const accessToken = localStorage.getItem('accessToken');
+  try {
+    const response = await api.get(`/tenant/get-tenant/${id}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      return { error: error.response?.data?.error || error.message || "Get tenant by id failed!" };
+    }
+    return { error: "Get tenant by id failed!" };
+  }
+}
+
+export const deleteTenant = async (id: number) => {
+  const accessToken = localStorage.getItem('accessToken');
+  if (!id) {
+    return { error: "Tenant id is required!" };
+  }
+  try {
+    const response = await api.delete(`/tenant/delete-tenant/${id}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    console.log("response from delete tenant: ", response);
+    deleteTenantJson(id);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      return { error: error.response?.data?.error || error.message || "Delete tenant failed!" };
+    }
+    return { error: "Delete tenant failed!" };
+  }
+}

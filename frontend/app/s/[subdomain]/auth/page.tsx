@@ -1,18 +1,25 @@
-"use client";
-import LoginForm from "@/components/Login";
-import React, { useState } from "react";
-import RegisterForm from "@/components/Register";
+import Auth from './auth';
+import { notFound } from 'next/navigation'; 
+import { getTenants } from '@/services/tenantjsonOperations';
 
-export default function AuthPage() {
-  const [page, setPage] = useState("login");
+export default async function AuthPage({ params }: { params: Promise<{ subdomain: string }> }) {
+  const { subdomain } = await params;
 
-  return (
-    <div className="flex items-center justify-center h-screen w-screen">
-      {page === "login" ? (
-        <LoginForm page={page} setPage={setPage} />
-      ) : (
-        <RegisterForm page={page} setPage={setPage} />
-      )}
-    </div>
-  );
+  async function getTenant(subdomain: string) {
+    if(!subdomain) return false;
+    try {
+      const tenants = await getTenants();
+      return tenants?.some((tenant: any) => tenant.subdomain === subdomain) || false;
+    } catch (error) {
+      console.error("Error getting tenant: ", error);
+      return false;
+    }
+  }
+
+  const tenant = await getTenant(subdomain);
+  if(!tenant) {
+    notFound();
+  }
+
+  return <Auth />;
 }

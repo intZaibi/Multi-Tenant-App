@@ -15,11 +15,11 @@ const login = async (req, res) => {
   if (req == undefined) return res.status(500).json({ error: "Something went wrong!" });
 
   try {
+
   const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
   if (!rows || rows.length === 0) return res.status(404).json({ error: "Email not found!" });
   if (!(await bcrypt.compare(password, rows[0].password))) return res.status(401).json({ error: "Invalid credentials!" });
-  
-  // Generate JWT token.
+  // Generate JWT token
   const accessToken = jwt.sign(
     { userId: rows[0].user_id, role: rows[0].role, tenantId: rows[0].tenant_id },
     process.env.JWT_SECRET || "enc",
@@ -41,18 +41,20 @@ const login = async (req, res) => {
     // Set token as an HTTP-only cookie
   res.cookie('accessToken', accessToken, {
     httpOnly: true, 
-    // secure: process.env.NODE_ENV === 'production',
-    // sameSite: 'lax',
+    // secure: true,
+    // sameSite: 'none',  // lax, strict, none  
+    // domain: process.env.NODE_ENV === 'production' ? `.${process.env.BASE_DOMAIN}` : undefined,
     maxAge: 60 * 60 * 1000,
-    // path: '/'
+    path: '/'
   });
 
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true, 
-    // secure: process.env.NODE_ENV === 'production',
-    // sameSite: 'lax',
+    // secure: true,
+    // sameSite: 'none',  // lax, strict, none
+    // domain: process.env.NODE_ENV === 'production' ? `.${process.env.BASE_DOMAIN}` : undefined,
     maxAge: 60 * 60 * 1000 * 24 * 30,
-    // path: '/'
+    path: '/'
   });
 
   res.status(200).json( {message: 'Login successful!', user: { userId: rows[0].user_id, first_name: rows[0].first_name, last_name: rows[0].last_name, email: rows[0].email, role: rows[0].role, accessToken, refreshToken }});
@@ -66,15 +68,15 @@ const login = async (req, res) => {
 
 const register = async (req, res) => {
 
-  const { first_name, last_name, email, password, role, tenantId = 1 } = req.body;
-  if (!first_name || !email || !password || !role ) return res.status(400).json({ error: "Please provide your first name, last name, email, password, role." });
+  const { name, last_name, email, password, role, tenantId = 1 } = req.body;
+  if (!name || !email || !password || !role ) return res.status(400).json({ error: "Please provide your first name, last name, email, password, role." });
   try {
     const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
     if (rows && rows.length > 0) return res.status(400).json({ error: "Email already exists!" });
     
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const [result] = await db.query('INSERT INTO users (first_name, last_name, email, password, role, tenant_id) VALUES (?, ?, ?, ?, ?, ?)', [first_name, last_name || '', email, hashedPassword, role, tenantId]); 
+    const [result] = await db.query('INSERT INTO users (first_name, last_name, email, password, role, tenant_id) VALUES (?, ?, ?, ?, ?, ?)', [name, last_name || '', email, hashedPassword, role, tenantId]); 
     if (result.affectedRows === 0) {
       return res.status(500).json({ error: "Registration failed!" });
     }
@@ -91,7 +93,7 @@ const register = async (req, res) => {
       { expiresIn: '30d' }
     );
 
-    const [result2] = await db.query('INSERT INTO user_sessions (user_id, refresh_token) VALUES (?, ?)', [result.user_id, refreshToken]);
+    const [result2] = await db.query('INSERT INTO user_sessions (user_id, refresh_token) VALUES (?, ?)', [result.insertId, refreshToken]);
     if (result2.affectedRows === 0) {
       return res.status(500).json({ error: "Token updation failed!" });
     }
@@ -99,7 +101,8 @@ const register = async (req, res) => {
     res.cookie('accessToken', accessToken, {
       httpOnly: true, 
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'none',
+      domain: process.env.NODE_ENV === 'production' ? `.${process.env.BASE_DOMAIN}` : '.localhost',
       maxAge: 60 * 60 * 1000,
       path: '/'
     });
@@ -107,12 +110,13 @@ const register = async (req, res) => {
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true, 
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'none',
+      domain: process.env.NODE_ENV === 'production' ? `.${process.env.BASE_DOMAIN}` : '.localhost',
       maxAge: 60 * 60 * 1000 * 24 * 30,
       path: '/'
     });
 
-    res.status(200).json({message: 'Registration successful!', user: { first_name, last_name, email, role, tenantId, accessToken: token, refreshToken: token }});
+    res.status(200).json({message: 'Registration successful!', user: { name, last_name: last_name || '', email, role, tenantId, accessToken: accessToken, refreshToken: refreshToken }});
     
   } catch (error) {
     console.log('db updation failed!', error)
@@ -165,6 +169,7 @@ const refresh = async (req, res) => {
       httpOnly: true, 
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
+      domain: process.env.NODE_ENV === 'production' ? `.${process.env.BASE_DOMAIN}` : '.localhost',
       maxAge: 60 * 60 * 1000,
       path: '/'
     });
@@ -173,11 +178,12 @@ const refresh = async (req, res) => {
       httpOnly: true, 
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
+      domain: process.env.NODE_ENV === 'production' ? `.${process.env.BASE_DOMAIN}` : '.localhost',
       maxAge: 60 * 60 * 1000 * 24 * 30,
       path: '/'
     });
   
-    res.status(200).json({message: 'Token refreshed successfully!', user: { userId: user[0].user_id, role: user[0].role, accessToken: newAccessToken, refreshToken: newRefreshToken }});
+    res.status(200).json({message: 'Token refreshed successfully!', user: { userId: user[0].user_id, first_name: user[0].first_name, last_name: user[0].last_name, email: user[0].email, role: user[0].role, tenantId: user[0].tenant_id, accessToken: newAccessToken, refreshToken: newRefreshToken }});
 
   } catch (error) {
     console.error('Database update failed:', error);
@@ -213,8 +219,7 @@ const logout = async (req, res) => {
 
 const getUser = async (req, res) => {
   try {
-    
-  const [rows] = await db.query('SELECT user_id, first_name, last_name, email, role, tenant_id FROM users WHERE user_id = ?', [req.user.userId]);
+  const [rows] = await db.query('SELECT user_id, first_name, last_name, email, role, tenant_id FROM users WHERE user_id = ? AND tenant_id = ?', [req.user.userId, req.user.tenantId]);
   if (!rows || rows.length === 0) {
     return res.status(401).json({ error: "Unauthorized! Token is not valid!" });
   }

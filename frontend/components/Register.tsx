@@ -1,27 +1,29 @@
+"use client";
 import { InputField } from "./ui/InputField";
 import { CustomButton } from "./ui/CustomButton";
 import { useEffect, useState } from "react";
 import { Shield, Loader2, User, Mail, Lock, Building } from "lucide-react";
 import { getTenants, register } from "../services/api";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
-export default function RegisterForm({ page, setPage }: { page: string, setPage: (page: string) => void }) {
+export default function RegisterForm({ setPage }: { setPage: React.Dispatch<React.SetStateAction<string>> }) {
   const router = useRouter();
+  const { subdomain } = useParams();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState("User");
   const [error, setError] = useState("");
-  const [tenantId, setTenantId] = useState(1);
+  const [tenantId, setTenantId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
-  const [tenantList, setTenantList] = useState([]);
 
   useEffect(() => {
     const fetchTenants = async () => {
       const res = await getTenants();
       if (res.error) setError(res.error);
-      else setTenantList(res.data);
+      else setTenantId(res.tenants.find((tenant: any) => tenant.subdomain === subdomain)?.id || null);
     }
     fetchTenants();
   }, []);
@@ -29,12 +31,13 @@ export default function RegisterForm({ page, setPage }: { page: string, setPage:
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) return setError("Passwords do not match!");
-    if (name === "" || email === "" || password === "" || confirmPassword === "") return setError("Please fill in all fields!");
+    if (name === "" || email === "" || password === "" || confirmPassword === "" || tenantId === null || role === "") return setError("Please fill in all fields!");
     setLoading(true);
+    setError("");
     try {
       
 
-      const res = await register(name, email, password, role, tenantId);
+      const res = await register(name, email, password, role, Number(tenantId));
       if (res.error) throw new Error(res.error);
       else {
         router.push('/dashboard');
@@ -69,6 +72,21 @@ export default function RegisterForm({ page, setPage }: { page: string, setPage:
               <InputField required icon={Mail} placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
               <InputField required icon={Lock} placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
               <InputField required icon={Lock} placeholder="Confirm Password" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+              <Select required value={role} onValueChange={(value: string) => setRole(value)}>
+                <SelectTrigger className="text-start w-full pr-4 py-6 bg-green-900/50 border border-slate-700 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-300 backdrop-blur-sm">
+                  <Building className="w-4 h-4 mr-2" />
+                  <SelectGroup>
+                    <SelectValue placeholder="Select a role" />
+                  </SelectGroup>
+                </SelectTrigger>
+                <SelectContent>
+                  {['Admin', 'Manager', 'User'].map((role) => (
+                    <SelectItem key={role} value={role}>
+                      {role}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {error && <p className="text-red-400">{error}</p>}
               <CustomButton type="submit" disabled={loading}>{loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Register"}</CustomButton>
               <div className="mt-2 text-sm flex items-center justify-center gap-2">

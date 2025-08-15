@@ -13,19 +13,18 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchUser = async () => {
       const user = await getServerUser();
-      setUser(user);
-      setLoading(false);
+      if(user){
+        setUser(user);
+        setLoading(false);
+      }else{
+        router.push('/auth');
+      }
     };
     fetchUser();
   }, []);
 
   if (loading) {
     return <div>Loading...</div>;
-  }
-
-  if (!user) {
-    console.log('Dashboard: No user found, redirecting to /auth');
-    router.push('/auth');
   }
 
     return (

@@ -46,7 +46,7 @@ export const InputField: React.FC<InputProps> = ({
           placeholder={placeholder}
           value={value}
           onChange={onChange}
-          className={`w-full ${Icon ? 'pl-12' : 'pl-4'} pr-12 py-4 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-300 backdrop-blur-sm ${className}`}
+          className={`w-full ${Icon ? 'pl-12' : 'pl-4'} pr-12 py-4 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-300 backdrop-blur-sm mr-4 ${className}`}
           {...props}
         />
       )}

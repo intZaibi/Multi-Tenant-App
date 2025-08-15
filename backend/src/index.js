@@ -2,8 +2,9 @@ import express from 'express'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import authRoutes from './routes/authRoutes.js'
-import { authMiddleware } from './middleware/auth.js'
 import notificationRoutes from './routes/notificationRoutes.js'
+import tenantRoutes from './routes/tenantRoutes.js'
+import { authMiddleware } from './middleware/auth.js'
 import { setupDatabase } from './dbSetup.js'
 
 const app = express()
@@ -31,7 +32,8 @@ app.get('/api/health', (req, res) => {
     environment: process.env.NODE_ENV 
   });
 });
-
+// Bypass auth for tenant routes bcz it has own auth middleware
+app.use('/api/tenant', tenantRoutes)
 // middleware
 app.use(authMiddleware)
 // // Routes

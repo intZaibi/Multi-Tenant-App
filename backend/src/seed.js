@@ -36,15 +36,15 @@ export const seedDatabase = async () => {
 
     if (existingTenant.length === 0) {
       await db.execute(
-        'INSERT INTO tenants (name) VALUES (?)',
-        ['Sample Organization']
+        'INSERT INTO tenants (name, subdomain) VALUES (?, ?)',
+        ['Sample Organization', 'sample']
       );
     } else {
       console.log('✅ Sample tenant already exists, skipping creation');
     }
 
-      const [rows] = await db.query(`SELECT * FROM users WHERE tenant_id = ?`, [1]);
-      if (!rows.length > 0) {
+      const [rows] = await db.query(`SELECT * FROM users`);
+      if (!(rows.length > 1)) {  // because one user i.e Super Admin is already created
 
       // Create sample users for the tenant
       const sampleUsers = [
@@ -90,7 +90,7 @@ export const seedDatabase = async () => {
       
     const [existingNotifications] = await db.execute(
       `SELECT * FROM notifications WHERE user_id = ?`,
-      [1]
+      [2]
     );
 
     if (existingNotifications.length > 0) {
@@ -146,16 +146,11 @@ export const seedDatabase = async () => {
           );
         }
       }
+      console.log('✅ Sample notifications created');
     }
 
-    console.log('✅ Sample notifications created');
     
-    console.log('🎉 Database seeding completed successfully!');
-    console.log('\n📋 Login Credentials:');
-    console.log('Super Admin: superadmin@example.com / superadmin123');
-    console.log('Admin: admin@sample.com / admin123');
-    console.log('Manager: manager@sample.com / manager123');
-    console.log('User: user@sample.com / user123');
+    console.log('🎉 Database seeding/setup completed successfully!');
 
     return true;
 

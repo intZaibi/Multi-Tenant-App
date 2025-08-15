@@ -1,11 +1,11 @@
 "use client";
 import DashboardLayout from '@/components/DashboardLayout';
-import DashboardContent from '@/components/DashboardContent';
+import TenantManagement from '@/components/TenantManagement';
 import { getServerUser, User } from '@/services/auth';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
-export default function DashboardPage() {
+export default function TenantPage() {
 
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -30,7 +30,7 @@ export default function DashboardPage() {
 
     return (
       <DashboardLayout user={user as User}>
-        <DashboardContent user={user as User} />
+        <TenantManagement />
       </DashboardLayout>
     );
 }

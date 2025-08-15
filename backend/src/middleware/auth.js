@@ -9,6 +9,7 @@ export const authMiddleware = async (req, res, next) => {
   }
 
   req.token = token;  // attached to be used in routesControllers
+  
   // Bypass auth for login and register routes
   if (req.path === '/api/auth/login' || req.path === '/api/auth/register') {
     return next();
@@ -18,12 +19,12 @@ export const authMiddleware = async (req, res, next) => {
   if (req.path === '/api/auth/refresh') {
     token = req.cookies?.refreshToken || req.headers.authorization?.split(' ')[1];
 
-    if (!token) return res.status(401).json({ error: 'Unauthorized' });
+    if (!token) return res.status(401).json({ error: 'Unauthorized! Token not found!' });
     req.token = token;
     return next();
   }
-  
-  if (!token) return res.status(401).json({ error: 'Unauthorized' });
+
+  if (!token) return res.status(401).json({ error: 'Unauthorized! Token not found!' });
   try {
     jwt.verify(token, process.env.JWT_SECRET || "enc", (err, decoded) => {
       if (err) {

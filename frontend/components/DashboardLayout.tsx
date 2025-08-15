@@ -55,7 +55,6 @@ export default function DashboardLayout({ children, user }: { children: React.Re
         <Header
           onMenuClick={() => setSidebarOpen(true)}
           onSidebarToggle={toggleSidebar}
-          sidebarCollapsed={sidebarCollapsed}
           user={user}
         />
 

@@ -1,3 +1,4 @@
+"use client";
 import { Shield, Mail, Lock, Loader2 } from 'lucide-react';
 import React, { useState } from 'react';
 import { InputField } from './ui/InputField';
@@ -5,7 +6,7 @@ import { CustomButton } from './ui/CustomButton';
 import { login } from '@/services/api';
 import { useRouter } from 'next/navigation';
 
-const LoginForm = ({ page, setPage }: { page: string, setPage: (page: string) => void }) => {
+const LoginForm = ({ setPage }: { setPage?: React.Dispatch<React.SetStateAction<string>> }) => {
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -62,9 +63,9 @@ const LoginForm = ({ page, setPage }: { page: string, setPage: (page: string) =>
               </div>
             </form>
 
-            <div className="mt-2 text-lg flex items-center justify-center gap-2">
-              <button onClick={() => setPage('register')} className="cursor-pointer text-slate-400 hover:text-slate-300">Create Account</button>
-            </div>
+            {setPage && <div className="mt-2 text-lg flex items-center justify-center gap-2">
+              <button onClick={()=>setPage('register')} className="cursor-pointer text-slate-400 hover:text-slate-300">Create Account</button>
+            </div>}
           </div>
         </div>
       </div>

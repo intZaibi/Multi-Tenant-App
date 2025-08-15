@@ -8,7 +8,6 @@ export async function setupDatabase() {
     console.error('❌ Database connection failed, skipping database setup');
     return;
   }
-  console.log('Database connection successful');
 
   try {
 
@@ -21,12 +20,12 @@ export async function setupDatabase() {
     // Use the database
     await connection.query(`USE ${process.env.DB_NAME || 'multi_tenant_saas'}`);
 
-    // Create tables
     // Create tables one by one
     const createTenantsTableSQL = `
       CREATE TABLE IF NOT EXISTS tenants (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
+        subdomain VARCHAR(255) NOT NULL UNIQUE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       );
@@ -74,7 +73,7 @@ export async function setupDatabase() {
     await connection.execute(createUsersTableSQL);
     await connection.execute(createNotificationsTableSQL);
     await connection.execute(createUserSessionsTableSQL);
-    console.log('✅ Tables created successfully');
+    console.log('✅ Tables created/verified successfully');
 
     // Create indexes separately, check existence and create one by one
     const indexes = [
@@ -127,14 +126,12 @@ export async function setupDatabase() {
         );
       }
     }
-    console.log('✅ Indexes created successfully');
+    console.log('✅ Indexes created/verified successfully');
 
     if (!(await seedDatabase())) {
       console.error('❌ Database seeding failed, skipping seeding');
       return ;
     }
-
-    console.log('🎉 Database setup completed successfully!');
 
   } catch (error) {
     console.error('❌ Database setup failed:', error.message);

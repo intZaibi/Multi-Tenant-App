@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-
+import { NextRequest } from 'next/server';
 
 function extractSubdomain(request: NextRequest): string | null {
   const url = request.url;
@@ -42,67 +41,26 @@ function extractSubdomain(request: NextRequest): string | null {
   return isSubdomain ? hostname.replace(`.${rootDomainFormatted}`, '') : null;
 }
 
-
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const subdomain = extractSubdomain(request);
 
-  const accessToken = request.cookies.get('accessToken')?.value;
-  const refreshToken = request.cookies.get('refreshToken')?.value;
-  
-  const publicRoutes = ['/auth', '/login', '/register', '/api/auth'];
-  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
-  
-  const protectedRoutes = ['/dashboard', '/profile', '/settings'];
-  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
-  
-  // If accessing a protected route without any tokens, redirect to auth
-//   if (isProtectedRoute && (!accessToken || !refreshToken)) {
-//   if (subdomain) {
-//     NextResponse.rewrite(new URL(`/s/${subdomain}`, request.url));
-//   }
-//   const response = NextResponse.redirect(new URL('/auth', request.url));
-//   return response;
-// }
 
-  
-  if (pathname === '/auth' && (accessToken || refreshToken)) {
-    if (subdomain) {
-      const dashboardUrl = new URL(`/s/${subdomain}/dashboard`, request.url);
-      const response = NextResponse.rewrite(dashboardUrl);
-      return response;
-    }else{
-      const dashboardUrl = new URL('/dashboard', request.url);
-      const response = NextResponse.redirect(dashboardUrl);
-      return response;
-    }
+  if(!subdomain && pathname === '/'){
+    console.log("redirecting to dashboard");
+    return NextResponse.redirect(new URL(`/dashboard`, request.url));
   }
-  
-  // If accessing root path with tokens, redirect to dashboard
-  if (pathname === '/' && (accessToken || refreshToken)) {
-    if (subdomain) {
-      const dashboardUrl = new URL(`/s/${subdomain}/dashboard`, request.url);
-      const response = NextResponse.rewrite(dashboardUrl);
-      return response;
-    }else{
-      const dashboardUrl = new URL('/dashboard', request.url);
-      const response = NextResponse.redirect(dashboardUrl);
-      return response;
-    }
+
+  if (subdomain && pathname === '/') {
+    console.log("redirecting to subdomain dashboard");
+    return NextResponse.rewrite(new URL(`/s/${subdomain}/dashboard`, request.url));
   }
-  
-  // If accessing root path without tokens, redirect to auth
-  if (pathname === '/' && !accessToken && !refreshToken) {
-    if (subdomain) {
-      const authUrl = new URL(`/s/${subdomain}/auth`, request.url);
-      const response = NextResponse.rewrite(authUrl);
-      return response;
-    }else{
-      const authUrl = new URL('/auth', request.url);
-      const response = NextResponse.redirect(authUrl);
-      return response;
-    }
+
+  if(subdomain){
+    console.log('redirecting to subdomain path')
+    return NextResponse.rewrite(new URL(`/s/${subdomain}${pathname}`, request.url));
   }
+
   
   return NextResponse.next(); 
 }
