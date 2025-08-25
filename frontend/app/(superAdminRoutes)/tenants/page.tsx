@@ -14,8 +14,8 @@ export default async function TenantsPage() {
 
     // Check if user is Super Admin
     if (user.role !== 'Super Admin') {
-      console.log('Tenants: User is not Super Admin, redirecting to /dashboard');
-      redirect('/dashboard');
+      console.log('Tenants: User is not Super Admin, redirecting to /auth');
+      redirect('/auth');
     }
 
     return (

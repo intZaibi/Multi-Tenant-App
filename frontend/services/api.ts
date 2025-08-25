@@ -3,22 +3,10 @@ import { deleteCookies, getCookies, setCookies } from "./cookies";
 import { insertTenant, deleteTenant as deleteTenantJson } from "./tenantjsonOperations";
 
 const api = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api",
   withCredentials: true,
   timeout: 10000,
 });
-
-// api.interceptors.response.use(
-//   (response) => response,
-//   async (error) => {
-//     if (axios.isAxiosError(error)) {
-//       if (error.response?.status === 401 || error.response?.status === 403) {
-//         await deleteCookies();
-//       }
-//     }
-//     return Promise.reject(error);
-//   }
-// );
 
 export const register = async (name: string, email: string, password: string, role: string, tenantId: number) => {
   
@@ -41,9 +29,9 @@ export const register = async (name: string, email: string, password: string, ro
 export const login = async (email: string, password: string) => {
   try {
     const response = await api.post("/auth/login", { email, password });
-
-    localStorage.setItem('accessToken', response.data.user.accessToken);
-    localStorage.setItem('refreshToken', response.data.user.refreshToken);
+    await setCookies(response.data.user.accessToken, response.data.user.refreshToken);
+    // localStorage.setItem('accessToken', response.data.user.accessToken);
+    // localStorage.setItem('refreshToken', response.data.user.refreshToken);
     
     return response.data;
   } catch (error) {
@@ -55,16 +43,15 @@ export const login = async (email: string, password: string) => {
   }
 }
 
-export const refreshToken = async () => {
-  const refreshToken = localStorage.getItem('refreshToken');
+export const refreshToken = async ( refreshToken = localStorage.getItem('refreshToken') ) => {
   try {
     const response = await api.get("/auth/refresh", {
       headers: {
         Authorization: `Bearer ${refreshToken}`,
       },
     });
-    localStorage.setItem('accessToken', response.data.user.accessToken);
-    localStorage.setItem('refreshToken', response.data.user.refreshToken);
+    // localStorage.setItem('accessToken', response.data.user.accessToken);
+    // localStorage.setItem('refreshToken', response.data.user.refreshToken);
     return response.data;
   } catch (error) {
     console.log("refresh token failed!", error);
@@ -76,8 +63,7 @@ export const refreshToken = async () => {
   }
 }
 
-export const getUser = async () => {
-  const accessToken = localStorage.getItem('accessToken');
+export const getUser = async ( accessToken = localStorage.getItem('accessToken') ) => {
   if (!accessToken) {
     return { error: "Token not found!" };
   }
@@ -87,7 +73,7 @@ export const getUser = async () => {
         Authorization: `Bearer ${accessToken}`,
       },
     });
-    localStorage.setItem('user', JSON.stringify(response.data.user));
+    // localStorage.setItem('user', JSON.stringify(response.data.user));
     return response.data;
   } catch (error) {
     console.log("get user failed!", error);

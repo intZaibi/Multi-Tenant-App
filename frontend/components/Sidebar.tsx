@@ -50,7 +50,7 @@ const navigationItems: NavItem[] = [
   },
   {
     name: 'Tenants',
-    href: '/tenant',
+    href: '/tenants',
     icon: Building2,
     roles: ['Super Admin'],
   },

@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import "dotenv/config";
 
 export const superadminAuth = async (req, res, next) => {
     const token = req.cookies?.accessToken;

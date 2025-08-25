@@ -76,6 +76,7 @@ export default function TenantManagement() {
       if (response.error) {
         setError(response.error);
       } else {
+
         setTenants((prev) => prev.map((tenant) => tenant.id === newTenant.id ? { ...tenant, id: response.tenant.insertId } : tenant));
       }
     } catch (error) {

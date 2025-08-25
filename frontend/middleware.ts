@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
+import { getServerUser } from './services/auth';
 
 function extractSubdomain(request: NextRequest): string | null {
   const url = request.url;
@@ -45,6 +46,15 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const subdomain = extractSubdomain(request);
 
+  const user = await getServerUser();
+  
+  if (!user && subdomain && !pathname.includes('/auth')) {
+    console.log(`Middleware: No user found, redirecting to /s/${subdomain}/auth`);
+    return NextResponse.rewrite(new URL(`/s/${subdomain}/auth`, request.url));
+  } else if(!user && pathname !== '/auth'){
+    console.log('Middleware: No user found, redirecting to /auth');
+    return NextResponse.redirect(new URL(`/auth`, request.url));
+  }
 
   if(!subdomain && pathname === '/'){
     console.log("redirecting to dashboard");
@@ -61,8 +71,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.rewrite(new URL(`/s/${subdomain}${pathname}`, request.url));
   }
 
-  
-  return NextResponse.next(); 
+  return NextResponse.next();
 }
 
 export const config = {

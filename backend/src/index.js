@@ -6,14 +6,15 @@ import notificationRoutes from './routes/notificationRoutes.js'
 import tenantRoutes from './routes/tenantRoutes.js'
 import { authMiddleware } from './middleware/auth.js'
 import { setupDatabase } from './dbSetup.js'
+import "dotenv/config";
 
 const app = express()
 const port = process.env.PORT || 5000
 
 app.use(cors({
   origin: [
-    /^http:\/\/.*\.localhost:3000/, // allows subdomains like abc.localhost:3000
-    'http://localhost:3000',
+    process.env.FRONTEND_URL_FOR_SUPER_ADMIN || 'http://localhost:3000',
+    process.env.FRONTEND_URL_FOR_TENANT || /^http:\/\/.*\.localhost:3000/, // allows subdomains like abc.localhost:3000
   ],
   credentials: true,
 }))
