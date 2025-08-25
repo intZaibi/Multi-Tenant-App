@@ -13,12 +13,12 @@ export async function getTenants() {
 export default async function Dashboard({ params  }: { params: Promise<{ subdomain: string }> }) {
   const { subdomain } = await params;
   const tenants = await getTenants();
-  const tenant = tenants?.some((tenant: any) => tenant.subdomain === subdomain) || false;
+  const tenant = tenants?.find((tenant: any) => tenant.subdomain === subdomain);
   if(!tenant) {
     notFound();
   }
 
   return (
-    <DashboardPage/>
+    <DashboardPage tenant_id={tenant.id}/>
   );
 }
