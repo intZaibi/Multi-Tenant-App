@@ -5,6 +5,7 @@ import { InputField } from './ui/InputField';
 import { CustomButton } from './ui/CustomButton';
 import { login } from '@/services/api';
 import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 const LoginForm = ({ setPage }: { setPage?: React.Dispatch<React.SetStateAction<string>> }) => {
   const [form, setForm] = useState({ email: '', password: '' });
@@ -21,6 +22,8 @@ const LoginForm = ({ setPage }: { setPage?: React.Dispatch<React.SetStateAction<
         router.push('/dashboard');
       }
     } catch (error) {
+      if(error instanceof Error && error.message.includes("ERR_BLOCKED_BY_CLIENT"))
+        toast.error("Please disable adblocker or use another browser or incognito mode");
       setError(error instanceof Error ? error.message : "Login failed!");
     } finally {
       setLoading(false);
