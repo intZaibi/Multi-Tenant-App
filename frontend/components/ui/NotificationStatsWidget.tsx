@@ -168,9 +168,9 @@ export default function NotificationStatsWidget({ userRole, className }: Notific
           </div>
 
           {/* Type Distribution */}
-          <div>
+          <div className='w-full'>
             <h5 className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">By Type</h5>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 lg:flex lg:flex-wrap lg:justify-between gap-2 w-full">
               {Object.entries(userStats?.notifications_by_type ?? {}).map(([type, count]) => {
                 const config = getTypeConfig(type);
                 const Icon = config.icon;

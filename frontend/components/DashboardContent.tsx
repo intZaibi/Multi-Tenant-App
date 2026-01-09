@@ -98,7 +98,7 @@ export default function DashboardContent({ user }: DashboardContentProps) {
               Welcome back {user?.first_name}!
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
-              Here's what's happening with your {user?.role.toLowerCase()} dashboard today.
+              Here's what's happening with your {user?.role?.toLowerCase()} dashboard today.
             </p>
           </div>
           <div className="ml-auto">
@@ -169,7 +169,7 @@ export default function DashboardContent({ user }: DashboardContentProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <NotificationStatsWidget 
           userRole={user?.role || ''} 
-          className="lg:col-span-1"
+          className="lg:col-span-3 col-span-1"
         />
         
       </div>

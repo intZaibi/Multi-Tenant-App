@@ -1,12 +1,17 @@
 [
   {
-    "id": 29,
-    "name": "new",
-    "subdomain": "new"
+    "id": 1,
+    "name": "Sample Organization",
+    "subdomain": "sample"
   },
   {
-    "id": 7,
+    "id": 29,
     "name": "ABC",
     "subdomain": "abc"
+  },
+  {
+    "id": 2,
+    "name": "XYZ",
+    "subdomain": "xyz"
   }
 ]

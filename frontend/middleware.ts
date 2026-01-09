@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
-import { getServerUser } from './services/auth';
 
 function extractSubdomain(request: NextRequest): string | null {
   const url = request.url;
@@ -46,31 +45,27 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const subdomain = extractSubdomain(request);
 
-  const user = await getServerUser();
-  
-  if (!user && subdomain && !pathname.includes('/auth')) {
-    console.log(`Middleware: No user found, redirecting to /s/${subdomain}/auth`);
-    return NextResponse.rewrite(new URL(`/s/${subdomain}/auth`, request.url));
-  } else if(!user && pathname !== '/auth'){
-    console.log('Middleware: No user found, redirecting to /auth');
-    return NextResponse.redirect(new URL(`/auth`, request.url));
-  }
+  console.log("subdomain: ", subdomain, "pathname: ", pathname);
 
+  // If no subdomain and path is /, redirect to admin dashboard
   if(!subdomain && pathname === '/'){
     console.log("redirecting to dashboard");
     return NextResponse.redirect(new URL(`/dashboard`, request.url));
   }
 
+  // If subdomain and path is /, redirect to subdomain dashboard
   if (subdomain && pathname === '/') {
     console.log("redirecting to subdomain dashboard");
     return NextResponse.rewrite(new URL(`/s/${subdomain}/dashboard`, request.url));
   }
 
+  // If subdomain and path is not /, redirect to subdomain path
   if(subdomain){
     console.log('redirecting to subdomain path')
     return NextResponse.rewrite(new URL(`/s/${subdomain}${pathname}`, request.url));
   }
 
+  // For all other paths, continue normal flow
   return NextResponse.next();
 }
 

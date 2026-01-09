@@ -1,4 +1,3 @@
-'use server';
 import DashboardPage from './dashboard'
 import { notFound } from 'next/navigation';
 

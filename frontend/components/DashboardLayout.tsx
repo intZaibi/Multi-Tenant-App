@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Sidebar from './Sidebar';
-import Header from './Header';
+import Sidebar from '@/components/Sidebar';
+import Header from '@/components/Header';
 import { User } from '@/services/auth';
 
 

@@ -9,10 +9,8 @@ export default async function HomePage() {
     
     // Redirect to dashboard if authenticated, otherwise to auth page
     if (user) {
-      console.log('Home: User authenticated, redirecting to /dashboard');
       redirect('/dashboard');
     } else {
-      console.log('Home: No user found, redirecting to /auth');
       redirect('/auth');
     }
   } catch (error) {

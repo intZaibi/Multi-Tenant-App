@@ -29,9 +29,9 @@ export const register = async (name: string, email: string, password: string, ro
 export const login = async (email: string, password: string) => {
   try {
     const response = await api.post("/auth/login", { email, password });
-    await setCookies(response.data.user.accessToken, response.data.user.refreshToken);
-    // localStorage.setItem('accessToken', response.data.user.accessToken);
-    // localStorage.setItem('refreshToken', response.data.user.refreshToken);
+    // await setCookies(response.data.user.accessToken, response.data.user.refreshToken);
+    localStorage.setItem('accessToken', response.data.user.accessToken);
+    localStorage.setItem('refreshToken', response.data.user.refreshToken);
     
     return response.data;
   } catch (error) {
@@ -50,8 +50,8 @@ export const refreshToken = async ( refreshToken = localStorage.getItem('refresh
         Authorization: `Bearer ${refreshToken}`,
       },
     });
-    // localStorage.setItem('accessToken', response.data.user.accessToken);
-    // localStorage.setItem('refreshToken', response.data.user.refreshToken);
+    localStorage.setItem('accessToken', response.data.user.accessToken);
+    localStorage.setItem('refreshToken', response.data.user.refreshToken);
     return response.data;
   } catch (error) {
     console.log("refresh token failed!", error);
@@ -73,8 +73,8 @@ export const getUser = async ( accessToken = localStorage.getItem('accessToken')
         Authorization: `Bearer ${accessToken}`,
       },
     });
-    // localStorage.setItem('user', JSON.stringify(response.data.user));
-    return response.data;
+    localStorage.setItem('user', JSON.stringify(response.data.user));
+    return response.data.user;
   } catch (error) {
     console.log("get user failed!", error);
     if (axios.isAxiosError(error)) {
@@ -216,6 +216,7 @@ export const deleteNotification = async (notificationId: number) => {
 export const getTenants = async () => {
   try {
     const response = await api.get("/tenant/get-tenants");
+    console.log("tenants: ", response.data);
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {

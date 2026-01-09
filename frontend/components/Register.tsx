@@ -38,7 +38,7 @@ export default function RegisterForm({ setPage }: { setPage: React.Dispatch<Reac
       const res = await register(name, email, password, role, Number(tenantId));
       if (res.error) throw new Error(res.error);
       else {
-        router.push(`/s/${subdomain}/dashboard`);
+        router.push(`/dashboard`);
       }
     } catch (error) {
       setError(error instanceof Error ? error.message : "Register failed!");

@@ -14,7 +14,7 @@ const port = process.env.PORT || 5000
 app.use(cors({
   origin: [
     process.env.FRONTEND_URL_FOR_SUPER_ADMIN || 'http://localhost:3000',
-    process.env.FRONTEND_URL_FOR_TENANT || /^http:\/\/.*\.localhost:3000/, // allows subdomains like abc.localhost:3000
+    process.env.FRONTEND_URL_FOR_TENANT || /^http:\/\/.*\.localhost:3000$/, // allows subdomains like abc.localhost:3000
   ],
   credentials: true,
 }))
