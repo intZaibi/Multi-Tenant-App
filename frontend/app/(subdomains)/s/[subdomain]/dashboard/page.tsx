@@ -1,7 +1,7 @@
 import DashboardPage from './dashboard'
 import { notFound } from 'next/navigation';
 
-export async function getTenants() {
+async function getTenants() {
   const fs = await import('fs');
   const path = await import('path');
   const tenantsPath = path.join(process.cwd(), 'tenants.json');
