@@ -12,6 +12,10 @@ export async function setupDatabase() {
 
     console.log('🔧 Setting up database...');
 
+    // Drop database if it exists
+    await connection.query(`DROP DATABASE IF EXISTS ${process.env.DB_NAME || 'multi_tenant_saas'}`);
+    console.log(`✅ Database '${process.env.DB_NAME || 'multi_tenant_saas'}' dropped/verified`);
+
     // Create database if it doesn't exist
     await connection.query(`CREATE DATABASE IF NOT EXISTS ${process.env.DB_NAME || 'multi_tenant_saas'}`);
     console.log(`✅ Database '${process.env.DB_NAME || 'multi_tenant_saas'}' created/verified`);

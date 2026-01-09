@@ -1,30 +1,47 @@
 import DashboardLayout from '@/components/DashboardLayout';
 import TenantManagement from '@/components/TenantManagement';
-import { getServerUser } from '@/services/auth';
-import { redirect } from 'next/navigation';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import { toast } from 'react-hot-toast';
+import { getUser } from '@/services/api';
+import { User } from '@/services/auth';
 
-export default async function TenantsPage() {
-  try {
-    const user = await getServerUser();
+export default function TenantsPage() {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-    if (!user) {
-      console.log('Tenants: No user found, redirecting to /auth');
-      redirect('/auth');
+  const router = useRouter();
+
+  useEffect(() => {
+    const getUserData = async () => {
+      setLoading(true);
+      const user = await getUser();
+      console.log("DashboardPage: user", user);
+      setUser(user);
+      setLoading(false);
     }
+    getUserData();
+  }, []);
 
-    // Check if user is Super Admin
-    if (user.role !== 'Super Admin') {
-      console.log('Tenants: User is not Super Admin, redirecting to /auth');
-      redirect('/auth');
-    }
+
+  if (loading) {
+    return <div>Loading...</div>;
+  } else if (!user) {
+    console.log("DashboardPage: User not found, redirecting to /auth");
+    toast.error("User not found, redirecting to /auth");
+    router.push('/auth');
+    return null;
+  }
+
+  if(user.role !== 'Super Admin') {
+    console.log('Dashboard: User is not Super Admin, redirecting to /auth');
+    router.push('/auth');
+  }
 
     return (
       <DashboardLayout user={user}>
         <TenantManagement />
       </DashboardLayout>
     );
-  } catch (error) {
-    console.error('Tenants page error:', error);
-    redirect('/auth');
-  }
 }

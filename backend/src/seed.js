@@ -10,7 +10,7 @@ export const seedDatabase = async () => {
 
     // Check if Super Admin already exists
     const [existingSuperAdmin] = await db.execute(
-      'SELECT user_id FROM users WHERE role = "Super Admin"'
+      "SELECT user_id FROM users WHERE role = 'Super Admin'"
     );
 
     if (existingSuperAdmin.length > 0) {
@@ -18,6 +18,7 @@ export const seedDatabase = async () => {
     } else {
       // Create Super Admin user
       const hashedPassword = await bcrypt.hash('superadmin123', 12);
+      console.log(hashedPassword);
       
       await db.execute(
         'INSERT INTO users (email, password, first_name, last_name, role) VALUES (?, ?, ?, ?, ?)',
@@ -31,7 +32,7 @@ export const seedDatabase = async () => {
     
     // Create sample tenant
     const [existingTenant] = await db.execute(
-      'SELECT id FROM tenants WHERE name = "Sample Organization"'
+      "SELECT id FROM tenants WHERE name = 'Sample Organization'"
     );
 
     if (existingTenant.length === 0) {
