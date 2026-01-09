@@ -1,3 +1,4 @@
+"use client";
 import DashboardLayout from '@/components/DashboardLayout';
 import TenantManagement from '@/components/TenantManagement';
 import { useState } from 'react';
